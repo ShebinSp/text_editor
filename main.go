@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io"
 	"strconv"
 
 	"fyne.io/fyne/v2"
@@ -43,12 +44,32 @@ func main() {
 			func(uc fyne.URIWriteCloser, _ error) {
 				textData := []byte(input.Text)
 				uc.Write(textData)
-				dialog.NewInformation("           Success", "File saved successfully", w).Show()
+				dialog.NewInformation("Success", "File saved successfully", w).Show()
 			}, w)
 
 		saveFileDialog.SetFileName("New file " + strconv.Itoa(count-1) + ".txt")
 		saveFileDialog.Show()
 	})
+
+	openBtn := widget.NewButton("Open", func() {
+	//  func NewFileOpen(callback func(fyne.URIReadCloser, error), parent fyne.Window) *FileDialog
+		openFileDialog := dialog.NewFileOpen(
+			func(r fyne.URIReadCloser, _ error) {
+				readData,_ := io.ReadAll(r)
+
+				output := fyne.NewStaticResource("New File",readData)
+				viewData := widget.NewMultiLineEntry()
+				viewData.SetText(string(output.StaticContent))
+
+				w := fyne.CurrentApp().NewWindow(
+					string(output.StaticName))
+					w.SetContent(container.NewScroll(viewData))
+					w.Resize(fyne.NewSize(400,400))
+					w.Show()
+			}, w,
+		)
+		openFileDialog.Show()
+	}) 
 
 	w.SetContent(
 		container.NewVBox(
@@ -57,6 +78,7 @@ func main() {
 
 			container.NewHBox(
 				saveBtn,
+				openBtn,
 			),
 		),
 	)
