@@ -53,20 +53,20 @@ func main() {
 	})
 
 	openBtn := widget.NewButton("Open", func() {
-	//  func NewFileOpen(callback func(fyne.URIReadCloser, error), parent fyne.Window) *FileDialog
+		//  func NewFileOpen(callback func(fyne.URIReadCloser, error), parent fyne.Window) *FileDialog
 		openFileDialog := dialog.NewFileOpen(
 			func(r fyne.URIReadCloser, _ error) {
-				readData,_ := io.ReadAll(r)
+				readData, _ := io.ReadAll(r)
 
-				output := fyne.NewStaticResource("New File",readData)
+				output := fyne.NewStaticResource("New File", readData)
 				viewData := widget.NewMultiLineEntry()
 				viewData.SetText(string(output.StaticContent))
 
 				w := fyne.CurrentApp().NewWindow(
 					string(output.StaticName))
-					w.SetContent(container.NewScroll(viewData))
-					w.Resize(fyne.NewSize(400,400))
-					w.Show()
+				w.SetContent(container.NewScroll(viewData))
+				w.Resize(fyne.NewSize(400, 400))
+				w.Show()
 			}, w,
 		)
 
@@ -74,7 +74,7 @@ func main() {
 			storage.NewExtensionFileFilter([]string{".txt"}),
 		)
 		openFileDialog.Show()
-	}) 
+	})
 
 	w.SetContent(
 		container.NewVBox(
