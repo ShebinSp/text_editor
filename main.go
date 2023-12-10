@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"io"
-	"strconv"
+	"strings"
+	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -12,10 +14,8 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-var count = 1
 
 func main() {
-
 	// Starting to create an app with fyne
 	a := app.New()
 
@@ -27,33 +27,75 @@ func main() {
 
 	content := container.NewVBox(
 		container.NewHBox(
-			widget.NewLabel("Nano Text Editor"),
+			widget.NewLabel(""),
 		),
 	)
 
-	content.Add(widget.NewButton("Add new file", func() {
-		content.Add(widget.NewLabel("New file " + strconv.Itoa(count)))
-		count++
-	}))
-
+	
+	// Declare 'input' outside the button click event
 	input := widget.NewMultiLineEntry()
 	input.SetPlaceHolder("Enter Text..")
-	input.Resize(fyne.NewSize(400, 400))
+	input.Resize(fyne.NewSize(400,400))
+
+	var nw fyne.Window
+	savedFiles := make([]string, 0)
 
 	saveBtn := widget.NewButton("Save", func() {
-		saveFileDialog := dialog.NewFileSave(
+			saveFileDialog := dialog.NewFileSave(
 			func(uc fyne.URIWriteCloser, _ error) {
 				textData := []byte(input.Text)
 				uc.Write(textData)
-				dialog.NewInformation("Success", "File saved successfully", w).Show()
-			}, w)
+				
+				input = widget.NewMultiLineEntry()
+				dialog.ShowInformation("Success", "File saved successfully", nw)
+	
+				// Update UI to show saved files
+				updateSavedFilesList(content, savedFiles)
+												
+			}, nw)
+					
+			
+		// changed
+		now := time.Now()
+		timeString := now.Format("15-04-05")
 
-		saveFileDialog.SetFileName("New file " + strconv.Itoa(count-1) + ".txt")
+		fileName := strings.Fields(input.Text)
+		var newFileName string
+		if len(fileName) >= 3 {
+			newFileName = strings.Join(fileName[:5], " ")
+		} else {
+			newFileName = input.Text
+		}
+
+		fname := fmt.Sprintf("%s %s.txt",newFileName,timeString)
+		saveFileDialog.SetFileName(fname)
+		saveFileDialog.Resize(fyne.NewSize(700,500))
 		saveFileDialog.Show()
+
+		savedFiles = append(savedFiles, fname)
+		
+				
 	})
 
-	openBtn := widget.NewButton("Open", func() {
-		//  func NewFileOpen(callback func(fyne.URIReadCloser, error), parent fyne.Window) *FileDialog
+	//content.Add
+	new := (widget.NewButton("Add new file", func() {
+
+		newWindow := fyne.CurrentApp().NewWindow("New File Window")
+		newWindow.Resize(fyne.NewSize(700, 700))
+		nw = newWindow
+
+		newWindow.SetContent(
+			container.NewVBox(
+				input,
+				saveBtn,
+			),
+		)
+		newWindow.Show()
+				
+	}))
+
+	openBtn := widget.NewButton("Open File", func() {
+		
 		openFileDialog := dialog.NewFileOpen(
 			func(r fyne.URIReadCloser, _ error) {
 				readData, _ := io.ReadAll(r)
@@ -69,23 +111,45 @@ func main() {
 				w.Show()
 			}, w,
 		)
-
+	
+		// filter only text files when perform open
 		openFileDialog.SetFilter(
 			storage.NewExtensionFileFilter([]string{".txt"}),
 		)
 		openFileDialog.Show()
 	})
 
-	w.SetContent(
-		container.NewVBox(
-			content,
-			input,
+	// Widget to display saved files
+	savedFilesLabel := widget.NewLabelWithStyle("Saved Files",fyne.TextAlignCenter,fyne.TextStyle{ Monospace: true})
+	
+	savedFilesList := widget.NewLabel("")
 
-			container.NewHBox(
-				saveBtn,
+	
+	
+	
+	w.SetContent(
+	//	container.NewVBox(
+			
+			container.NewVBox(
+				new,
 				openBtn,
+				content,
+				
 			),
-		),
+		//),
 	)
+	content.Add(savedFilesLabel)
+	content.Add(savedFilesList)
+
 	w.ShowAndRun() // Run the app
+}
+
+func updateSavedFilesList(content *fyne.Container, savedFiles []string){
+	if len(savedFiles) > 0 {
+		savedFileListText := ""
+		for _, file := range savedFiles {
+			savedFileListText += file + "\n"
+		}
+		content.Objects[3].(*widget.Label).SetText(savedFileListText)
+	}
 }
