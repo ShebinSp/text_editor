@@ -61,7 +61,7 @@ func main() {
 
 		fileName := strings.Fields(input.Text)
 		var newFileName string
-		if len(fileName) >= 3 {
+		if len(fileName) >= 5 {
 			newFileName = strings.Join(fileName[:5], " ")
 		} else {
 			newFileName = input.Text
